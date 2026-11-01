@@ -17,6 +17,6 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": { "react": ">=18" },
-  "devDependencies": { "@types/node": "^22.10.0", "@types/react": "^19.0.0", "react": "^19.0.0", "tsup": "^8.3.0", "typescript": "^5.7.0" },
+  "devDependencies": { "@types/node": "^26.6.6", "@types/react": "^19.0.0", "react": "^19.0.0", "tsup": "^8.3.0", "typescript": "^5.7.0" },
   "publishConfig": { "access": "public", "provenance": true }
 }
