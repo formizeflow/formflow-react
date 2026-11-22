@@ -3,7 +3,7 @@
  * React bindings for public/embed.js. SSR-safe: nothing touches `window` during render; the script loads once on demand.
  * Types for the underlying SDK live in ../embed/types.d.ts.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from "react";
 import type { EmbedMode, EmbedOptions, EmbedWidget } from "./embed-types";
 
 type Common = Omit<EmbedOptions, "mode">;
@@ -44,9 +44,9 @@ const defaultBase = () => (typeof process !== "undefined" ? process.env.NEXT_PUB
 export function FormFlowEmbed({ slug, baseUrl, mode = "inline", className, style, ...opts }: FormFlowEmbedProps) {
   const host = useRef<HTMLDivElement>(null);
   const cb = useRef(opts);
-  cb.current = opts; // always call the latest callbacks without rebuilding the widget
+  useLayoutEffect(() => { cb.current = opts; }); // always call the latest callbacks without rebuilding the widget
   const base = baseUrl ?? defaultBase();
-  const { onReady: _a, onSubmit: _b, onProgress: _c, onError: _d, onClose: _e, ...structuralOpts } = opts;
+  const { onReady: _a, onSubmit: _b, onProgress: _c, onError: _d, onClose: _e, onSkip: _f, ...structuralOpts } = opts;
   const structural = JSON.stringify(structuralOpts);
 
   useEffect(() => {
@@ -63,6 +63,7 @@ export function FormFlowEmbed({ slug, baseUrl, mode = "inline", className, style
         onProgress: (d) => cb.current.onProgress?.(d),
         onError: (d) => cb.current.onError?.(d),
         onClose: () => cb.current.onClose?.(),
+        onSkip: (d) => cb.current.onSkip?.(d),
       });
     }).catch((e: unknown) => cb.current.onError?.({ message: e instanceof Error ? e.message : "load failed" }));
     return () => { cancelled = true; widget?.destroy(); };
@@ -94,13 +95,13 @@ export type FormFlowPopupButtonProps = Common & Omit<ButtonHTMLAttributes<HTMLBu
 
 /** A normal <button> (style it yourself) that opens the form as a popup, slider, modal... */
 export function FormFlowPopupButton(props: FormFlowPopupButtonProps) {
-  const { slug, baseUrl, mode = "popup", children, onClick, prefill, hidden, styles, title, passQueryParams, transitiveSearchParams, autoClose, prefillFromUrl, prefillFromDataLayer, autoResize, onReady, onSubmit, onProgress, onError, onClose, buttonText: _bt, launcher: _l, trigger: _t, ...rest } = props;
+  const { slug, baseUrl, mode = "popup", children, onClick, prefill, hidden, styles, title, passQueryParams, transitiveSearchParams, autoClose, prefillFromUrl, prefillFromDataLayer, autoResize, locale, consent, onRedirect, onSkip, skippable, returnUrl, atlasToken, test, uid, uidSignature, onReady, onSubmit, onProgress, onError, onClose, buttonText: _bt, launcher: _l, trigger: _t, ...rest } = props;
   const ff = useFormFlow({ baseUrl });
   return (
     <button type="button" {...rest} aria-haspopup="dialog" disabled={rest.disabled || !ff.ready}
       onClick={(e) => {
         onClick?.(e);
-        if (!e.defaultPrevented) ff.open(slug, { mode, prefill, hidden, styles, title, passQueryParams, transitiveSearchParams, autoClose, prefillFromUrl, prefillFromDataLayer, autoResize, onReady, onSubmit, onProgress, onError, onClose });
+        if (!e.defaultPrevented) ff.open(slug, { mode, prefill, hidden, styles, title, passQueryParams, transitiveSearchParams, autoClose, prefillFromUrl, prefillFromDataLayer, autoResize, locale, consent, onRedirect, onSkip, skippable, returnUrl, atlasToken, test, uid, uidSignature, onReady, onSubmit, onProgress, onError, onClose });
       }}>
       {children ?? "Open form"}
     </button>
